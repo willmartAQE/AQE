@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Atomic Quantum Engine - Performance Benchmark",
   "main": "dist/aqe-light.min.js",
-  "scripts": {
+     "scripts": {
     "build:light": "terser src/AQE-Light.js --compress --mangle --output dist/aqe-light.min.js",
     "start": "echo \"Run 'npm run build:light' to generate minified files.\"",
     "test": "echo \"Error: no test specified\" && exit 1"
