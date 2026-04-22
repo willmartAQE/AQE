@@ -3,33 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AQE - Performance Demo</title>
+    <title>AQE - Performance Benchmark</title>
     <link rel="stylesheet" href="style.css">
     <!-- Includi la versione Light -->
-    <script src="../dist/aqe-light.min.js"></script>
-    <!-- Includi la versione Pro (potrebbe essere caricata dinamicamente o da un altro script) -->
-    <!-- <script src="../dist/aqe.min.js"></script> -->
+    <script src="../dist/aqe-light.min.js"></script> 
 </head>
 <body>
-    <h1>AQE - Performance Showdown</h1>
-    
+    <h1>AQE Performance Benchmark</h1>
+    <p>Comparing AQE Light (Main Thread) vs AQE Pro (Parallel Worker)</p>
+
     <div class="controls">
         <label for="nodeCount">Number of Nodes:</label>
-        <input type="range" id="nodeCount" min="100" max="50000" value="10000">
-        <span id="nodeCountValue">10000</span> Nodes
+        <input type="range" id="nodeCount" min="1000" max="50000" step="1000" value="20000">
+        <span id="nodeCountValue">20000</span> Nodes
         
         <label for="selector">CSS Selector:</label>
-        <input type="text" id="selector" value="div.test-node">
+        <input type="text" id="selector" value="div.test-node.active#node-12345">
 
-        <button id="testLightBtn">Test Light Version</button>
-        <button id="testProBtn">Test Pro Version</button>
+        <button id="runBenchmarkBtn">Run Benchmark</button>
     </div>
 
-    <div id="output">
+    <div id="results">
         <h2>Results:</h2>
-        <p>Click a test button to see performance metrics.</p>
+        <p>Click "Run Benchmark" to start.</p>
+        <div id="chart"></div> <!-- Qui potresti inserire un grafico -->
     </div>
 
-    <script src="script.js"></script> <!-- Il tuo script principale per la demo -->
+    <!-- Il tuo script per il benchmark -->
+    <script src="benchmark.js"></script> 
 </body>
 </html>
