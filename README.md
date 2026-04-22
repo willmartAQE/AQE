@@ -119,7 +119,6 @@ lightEngine.destroy();
 - **Email**: [williammartin.aqe@gmail.com](mailto:williammartin.aqe@gmail.com)
 - **Role**: Lead Architect & Developer
 
----
 
 ## 📄 License
 
