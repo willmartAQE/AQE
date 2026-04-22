@@ -1,126 +1,149 @@
-# AQE - Atomic Quantum Engine v2
+# AQE - Atomic Quantum Engine
 
-**AQE** is a revolutionary CSS selector and spatial query engine designed for unparalleled performance in modern web applications. By harnessing the power of **Atomic Operations**, **Parallel Web Workers**, and **Spatial Pruning**, AQE delivers near-instantaneous results, ensuring a consistently smooth UI even in the most demanding scenarios.
-
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Engine: Quantum-Performance](https://img.shields.io/badge/Engine-Atomic--Quantum-blueviolet)](#)
-
-## 🚀 Why AQE?
-
-Traditional DOM querying engines often block the main thread, leading to noticeable UI lag. AQE tackles this by treating the document as a high-speed binary buffer, processed in parallel.
-
-### Key Technical Pillars:
-- **Quantum Leap Performance**: Achieved through parallel processing via Web Workers (Pro version).
-- **Atomic Synchronization**: Guarantees thread-safe data integrity using `Atomics.load/store` (Pro version).
-- **Spatial Pruning**: Integrated **AABB (Axis-Aligned Bounding Box)** intersection for ultra-fast geometric filtering (Pro version).
-- **Zero-Latency Memory**: Utilizes `SharedArrayBuffer` for efficient, zero-copy data access between threads (Pro version).
-- **Intelligent Memory Management**: Automatic slot recycling and `WeakMap` integration prevent memory leaks in dynamic applications.
-- **Bitmask Matching**: O(1) CSS selector matching using 64-bit integer bitmasks.
+AQE (Atomic Quantum Engine) is a cutting-edge JavaScript library designed to deliver unparalleled performance in DOM querying and manipulation. By leveraging atomic operations, Web Workers (in the Pro version), and a sophisticated spatial pruning architecture, AQE drastically reduces query times, making it ideal for complex web applications, large dataset rendering, and highly interactive user interfaces.
 
 ---
 
-## 💡 Light vs. Pro Version
+## Version Comparison: Light vs. Pro
 
-AQE is available in two versions:
+AQE is available in two primary versions, each optimized for different use cases:
 
-| Feature               | **AQE Light (Free)**                                    | **AQE Pro (Paid)**                                         |
-| :-------------------- | :------------------------------------------------------ | :--------------------------------------------------------- |
-| **Execution Model**   | Synchronous (Main Thread)                               | **Asynchronous (Parallel Web Worker)**                     |
-| **Performance**       | Fast for small DOMs, can block UI                       | **Near-instantaneous, zero UI impact**                     |
-| **Max Nodes Tracked** | **500** (Hard Limit)                                    | **Unlimited** (Scales with memory)                         |
-| **Memory Management** | Standard JS Objects/Map                                 | **SharedArrayBuffer + Atomics** (Zero-copy, thread-safe) |
-| **Spatial Filtering** | Basic (demonstration only)                              | **Advanced AABB Pruning**                                  |
-| **Use Case**          | Simple demos, small projects, learning                  | **High-performance apps, games, real-time dashboards**     |
-| **License**           | MIT                                                     | Commercial (Contact for details)                           |
+### ⚡ AQE Light (Main Thread)
 
----
+*   **Architecture**: Executes all operations on the browser's main thread.
+*   **Performance**: Offers a significant improvement over standard DOM methods for simple queries and moderate-sized datasets.
+*   **Maximum Capacity**: Limited to **500 nodes** registered in the buffer. Exceeding this limit is not possible.
+*   **Technologies**: Uses CSS bitmasks for filtering and geometric coordinates, but **does not** utilize `SharedArrayBuffer` or Web Workers.
+*   **Use Cases**: Ideal for websites with smaller DOMs, rapid prototyping, or when parallel processing is not required.
+*   **Advantages**: Easy to include, requires no special server configurations.
 
-## 📦 Installation
+### 🚀 AQE Pro (Parallel Worker)
 
-### AQE Light (Free)
-
-For basic usage and demonstrations, include the light version directly. No special server configuration is needed.
-
-```html
-<!-- Include via script tag -->
-<script src="path/to/aqe-light.min.js"></script> 
-```
-
-### AQE Pro (Paid)
-
-To unlock the full potential of parallel processing and advanced features, you need the Pro version.
-
-1.  **Purchase a license** from William Martin ([williammartin.aqe@gmail.com](mailto:williammartin.aqe@gmail.com)).
-2.  **Include the Pro version** in your project. This may involve:
-    *   Including a provided `aqe.min.js` file.
-    *   Using a private npm package (if available).
-    *   Ensuring your server provides the necessary headers for **Cross-Origin Isolation**:
-        ```http
-        Cross-Origin-Opener-Policy: same-origin
-        Cross-Origin-Embedder-Policy: require-corp
-        ```
+*   **Architecture**: Fully utilizes Web Workers to execute query operations in parallel on a separate thread.
+*   **Performance**: **Significantly faster** than the Light version, especially for complex queries and large data volumes.
+*   **Maximum Capacity**: Supports up to **50,000 nodes** (or more, depending on memory configuration) in the buffer, managed efficiently.
+*   **Technologies**: Employs `SharedArrayBuffer` for efficient inter-thread communication, atomic operations for data safety, and Web Workers for parallelism. Also implements advanced spatial pruning (AABB).
+*   **Use Cases**: Complex web applications, interactive dashboards, large-scale data visualizations, browser-based games, and anywhere DOM performance is critical.
+*   **Advantages**: Exceptional performance, guaranteed UI responsiveness even under heavy load.
+*   **Requirements**: Requires a server environment that sends the `Cross-Origin-Opener-Policy` and `Cross-Origin-Embedder-Policy` headers to enable `SharedArrayBuffer` (not available on static GitHub Pages; requires a local or dedicated server).
 
 ---
 
-## 🛠 Usage
+### Performance Estimation: Light vs. Pro
+
+Providing an exact performance estimate is challenging without specific benchmarks on your hardware and for your particular use case. However, we can make generalizations based on the architecture:
+
+*   **Simple Queries (e.g., `#id`, `tagname`) on Few Nodes**: The difference might be minimal. The Light version could even be slightly faster due to lower overhead from not communicating with a worker.
+*   **Complex Queries (e.g., combinations of classes, IDs, attributes) on Many Nodes**: This is where the Pro version excels. Thanks to parallel processing and `SharedArrayBuffer` usage, the Pro version can be **5x to 50x faster**, or even more, compared to the Light version. Parallel processing distributes the workload across multiple CPU cores, while direct access to shared memory eliminates communication bottlenecks.
+*   **Queries with Spatial Filtering on Many Nodes**: The Pro version is specifically designed to excel in this scenario, with efficient AABB pruning implemented in the worker. The Light version, performing filtering on the main thread, can become a significant bottleneck.
+
+**In Summary:**
+
+*   If you're working with a small DOM and don't need parallel processing, **AQE Light** is an excellent and easy-to-use choice.
+*   If you require maximum performance, handle large amounts of data, or need to guarantee UI responsiveness under load, **AQE Pro** is the indispensable solution. Remember that it requires a specific execution environment (server with COOP/COEP headers) to fully leverage its capabilities.
+
+---
+
+## Key Features
+
+*   **Ultra-fast DOM Queries**: Select elements with complex CSS selectors efficiently.
+*   **Spatial Filtering**: Narrow down searches based on geometric coordinates (superior performance in Pro version).
+*   **Dynamic Handling**: Automatically synchronizes DOM changes via `MutationObserver`.
+*   **Scalable Architecture**: Designed to handle from a few to millions of elements.
+*   **Intuitive API**: Easy to integrate into your workflow.
+
+---
+
+## Installation
+
+### AQE Light
+
+1.  Download the `aqe-light.min.js` file.
+2.  Include it in your HTML:
+    ```html
+    <script src="path/to/aqe-light.min.js"></script>
+    ```
+3.  Initialize the engine in your JavaScript:
+    ```javascript
+    // Assuming AIELight is the class name for the light version
+    const lightEngine = new AIELight(500); // Max 500 nodes
+    // Or if using AQE class for both and distinguishing by constructor args/availability:
+    // const lightEngine = new AQE(500); // Max 500 nodes
+    ```
+
+### AQE Pro
+
+1.  Obtain the `aqe.pro.min.js` file (compiled from the Pro source code).
+2.  Place it in your distribution directory (e.g., `dist/`).
+3.  Include it in your HTML:
+    ```html
+    <script src="dist/aqe.pro.min.js"></script>
+    ```
+4.  **Important**: To enable `SharedArrayBuffer` and Web Workers, your page must be served by a server that sends the following HTTP headers:
+    *   `Cross-Origin-Opener-Policy: same-origin`
+    *   `Cross-Origin-Embedder-Policy: require-corp` (or `credentialless`)
+    This is **not possible on static GitHub Pages**. You will need to use a local server (e.g., with Node.js) or dedicated hosting to test the Pro version.
+
+5.  Initialize the Pro engine:
+    ```javascript
+    const proEngine = new AQE(50000); // Max 50,000 nodes
+    ```
+
+---
+
+## Usage
 
 ### Initialization
 
 ```javascript
-// Initialize AQE Light (Free Version)
+// For AQE Light
 const lightEngine = new AIELight(500); // Max 500 nodes
+
+// For AQE Pro (requires server with COOP/COEP headers)
+const proEngine = new AQE(50000); // Max 50,000 nodes (or more)
+```
+
+### Node Synchronization
+
+AQE automatically synchronizes DOM nodes when they are added or modified. You can also force a full synchronization:
+
+```javascript
+// Synchronize all currently existing nodes in the document
 lightEngine.syncAll();
-
-// Initialize AQE Pro (Paid Version) - Requires Pro engine loaded
-// Ensure AIE (the Pro version class) is loaded before this
-if (typeof AIE !== 'undefined') {
-    const proEngine = new AIE(50000); // Can handle many more nodes
-    // Pro engine might auto-sync or require syncAll() depending on setup
-    // proEngine.syncAll(); 
-}
+// or
+proEngine.syncAll();
 ```
 
-### High-Speed CSS Query
+### Executing Queries
 
 ```javascript
-// Query using the Light engine (synchronous)
-const activeItemsLight = lightEngine.query('div.active'); 
+// Example query with AQE Light
+const nodes = await lightEngine.query('div.my-class#unique-id');
 
-// Query using the Pro engine (asynchronous, parallel)
-// const activeItemsPro = await proEngine.query('div.active'); 
-```
-
-### Spatial + CSS Query (AQE Pro Only)
-
-This feature is exclusive to the Pro version for maximum performance.
-
-```javascript
-// Find elements within a 100px radius of the mouse cursor
-const relevantElements = await proEngine.query('.hover-effect', {
-    x: e.clientX,
-    y: e.clientY,
-    radius: 100
-});
+// Example query with AQE Pro (with spatial filter)
+const bounds = { x: 100, y: 200, radius: 50 }; // Rectangle centered at (100, 200) with radius 50
+const nodesPro = await proEngine.query('p.highlight', bounds);
 ```
 
 ### Lifecycle Management
 
+It's important to destroy the engine when it's no longer needed to free up resources (Web Worker, MutationObserver).
+
 ```javascript
-// Clean up resources when the engine is no longer needed
-lightEngine.destroy(); 
-// proEngine.destroy(); // Call destroy on the Pro engine instance
+// When you no longer need the engine
+lightEngine.destroy();
+// or
+proEngine.destroy();
 ```
 
 ---
 
-## 👨‍💻 Author
+## Contributing
 
-**William Martin**
-- **Email**: [williammartin.aqe@gmail.com](mailto:williammartin.aqe@gmail.com)
-- **Role**: Lead Architect & Developer
+Contributions are welcome! Please open an issue or a pull request.
 
+---
 
-## 📄 License
+## License
 
-- **AQE Light**: Licensed under the **MIT License**. (See `LICENSE` file)
-- **AQE Pro**: Commercial License. Please contact William Martin for details and pricing. (See `LICENSE-PRO.md`)
+This project is licensed under the [MIT](LICENSE) License.
