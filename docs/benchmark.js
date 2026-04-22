@@ -179,4 +179,16 @@ async function runBenchmark() {
             proTime = Infinity;
         }
     } else {
-        resultsDiv.innerHTML += `<p>AQE Pro engine class 'AQE' not found. Ensure 'aqe.pro
+        resultsDiv.innerHTML += `<p>AQE Pro engine class 'AQE' not found. Ensure 'aqe.pro.min.js' is loaded.</p>`;
+        proTime = Infinity;
+    }
+
+    benchmarkRunning = false;
+    runBenchmarkBtn.disabled = false;
+}
+
+// Event listeners
+runBenchmarkBtn.addEventListener('click', runBenchmark);
+selectorInput.addEventListener('input', (e) => {
+    currentSelector = e.target.value;
+});
