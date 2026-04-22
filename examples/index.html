@@ -1,1 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AQE - Performance Demo</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Includi la versione Light -->
+    <script src="../dist/aqe-light.min.js"></script>
+    <!-- Includi la versione Pro (potrebbe essere caricata dinamicamente o da un altro script) -->
+    <!-- <script src="../dist/aqe.min.js"></script> -->
+</head>
+<body>
+    <h1>AQE - Performance Showdown</h1>
+    
+    <div class="controls">
+        <label for="nodeCount">Number of Nodes:</label>
+        <input type="range" id="nodeCount" min="100" max="50000" value="10000">
+        <span id="nodeCountValue">10000</span> Nodes
+        
+        <label for="selector">CSS Selector:</label>
+        <input type="text" id="selector" value="div.test-node">
 
+        <button id="testLightBtn">Test Light Version</button>
+        <button id="testProBtn">Test Pro Version</button>
+    </div>
+
+    <div id="output">
+        <h2>Results:</h2>
+        <p>Click a test button to see performance metrics.</p>
+    </div>
+
+    <script src="script.js"></script> <!-- Il tuo script principale per la demo -->
+</body>
+</html>
