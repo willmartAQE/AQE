@@ -1,0 +1,23 @@
+{
+  "name": "package.json",
+  "version": "1.0.0",
+  "description": "AQE — Atomic Quantum Engine",
+  "keywords": [
+    "CSS"
+  ],
+  "homepage": "https://github.com/willmartAQE/AQE#readme",
+  "bugs": {
+    "url": "https://github.com/willmartAQE/AQE/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/willmartAQE/AQE.git"
+  },
+  "license": "MIT",
+  "author": "William Martin",
+  "type": "commonjs",
+  "main": "AQE-light.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  }
+}
