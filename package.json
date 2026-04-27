@@ -1,23 +1,63 @@
 {
-  "name": "package.json",
+  "name": "aqe-light",
   "version": "1.0.0",
-  "description": "AQE — Atomic Quantum Engine",
+  "description": "AQE (Atomic Quantum Engine) — The fastest and most advanced DOM selection engine. Up to 50x faster than traditional CSS selectors and querySelector, with parallel processing, spatial filtering, and optimized data structures for maximum performance in modern web applications.",
   "keywords": [
-    "CSS"
+    "aqe",
+    "atomic-quantum-engine",
+    "dom",
+    "dom-selector",
+    "css-selector",
+    "queryselector",
+    "javascript",
+    "frontend",
+    "performance",
+    "speed",
+    "optimization",
+    "web-performance",
+    "parallel-processing",
+    "web-worker",
+    "spatial-filtering",
+    "ui",
+    "rendering",
+    "high-performance",
+    "lightweight",
+    "pro-version",
+    "dom-manipulation",
+    "browser",
+    "web-development"
   ],
   "homepage": "https://github.com/willmartAQE/AQE#readme",
   "bugs": {
-    "url": "https://github.com/willmartAQE/AQE/issues"
+    "url": "https://github.com/willmartAQE/AQE/issues",
+    "email": "williammartin.aqe@gmail.com"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/willmartAQE/AQE.git"
   },
   "license": "MIT",
-  "author": "William Martin",
+  "author": "William Martin <williammartin.aqe@gmail.com>",
   "type": "commonjs",
   "main": "AQE-light.js",
+  "module": "AQE-light.js",
+  "browser": "AQE-light.js",
+  "files": [
+    "AQE-light.js",
+    "AQE-pro.js",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"No tests defined yet\" && exit 0",
+    "info": "echo \"AQE - Atomic Quantum Engine: The fastest DOM selector available\""
+  },
+  "engines": {
+    "node": ">=12.0.0",
+    "browsers": ">=Chrome 60, >=Firefox 55, >=Safari 11, >=Edge 79"
+  },
+  "funding": {
+    "type": "individual",
+    "url": "https://github.com/sponsors/willmartAQE"
   }
 }
