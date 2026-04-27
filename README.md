@@ -228,19 +228,39 @@ With 32 nodes per bucket and a selective target mask, typically 60–90% of buck
 
 No build step required. Drop the file into your project and import it.
 
-**Via script tag:**
+**Via npm:**
+```bash
+npm install atomic-quantum-engine
+```
+
+**Via script tag (local):**
 ```html
 <script src="AQE-Light.js"></script>
 ```
 
-**Via ES module:**
+**Via CDN — unpkg:**
+```html
+<script src="https://unpkg.com/atomic-quantum-engine@latest/AQE-light.js"></script>
+```
+
+**Via CDN — jsDelivr:**
+```html
+<script src="https://cdn.jsdelivr.net/npm/atomic-quantum-engine@latest/AQE-light.js"></script>
+```
+
+**Via ES module (local):**
 ```js
 import AQELight from './AQE-Light.js';
 ```
 
-**Via npm (if published):**
-```bash
-npm install aqe-light
+**Via ES module (unpkg):**
+```js
+import AQELight from 'https://unpkg.com/atomic-quantum-engine@latest/AQE-light.js';
+```
+
+**Via ES module (jsDelivr):**
+```js
+import AQELight from 'https://cdn.jsdelivr.net/npm/atomic-quantum-engine@latest/AQE-light.js';
 ```
 
 ### AQE Pro
