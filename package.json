@@ -1,31 +1,21 @@
 {
-  "name": "aqe-light",
-  "version": "1.0.0",
-  "description": "AQE (Atomic Quantum Engine) — The fastest and most advanced DOM selection engine. Up to 50x faster than traditional CSS selectors and querySelector, with parallel processing, spatial filtering, and optimized data structures for maximum performance in modern web applications.",
+  "name": "atomic-quantum-engine",
+  "version": "3.0.0",
+  "description": "High-performance CSS selector engine built on BigInt bitmasks, SharedArrayBuffer, dual Bloom bucket indexing, and off-thread Web Worker matching. Up to 40× faster than querySelectorAll on large DOMs with high query frequency.",
   "keywords": [
-    "aqe",
-    "atomic-quantum-engine",
-    "dom",
-    "dom-selector",
     "css-selector",
+    "dom",
+    "dom-query",
     "queryselector",
-    "javascript",
-    "frontend",
     "performance",
-    "speed",
-    "optimization",
-    "web-performance",
-    "parallel-processing",
+    "bitmask",
     "web-worker",
-    "spatial-filtering",
-    "ui",
-    "rendering",
+    "sharedarraybuffer",
+    "bloom-filter",
+    "spatial-query",
     "high-performance",
-    "lightweight",
-    "pro-version",
-    "dom-manipulation",
-    "browser",
-    "web-development"
+    "frontend",
+    "browser"
   ],
   "homepage": "https://github.com/willmartAQE/AQE#readme",
   "bugs": {
@@ -38,26 +28,35 @@
   },
   "license": "MIT",
   "author": "William Martin <williammartin.aqe@gmail.com>",
-  "type": "commonjs",
-  "main": "AQE-light.js",
-  "module": "AQE-light.js",
-  "browser": "AQE-light.js",
+  "type": "module",
+  "main": "./dist/AQE-light.cjs",
+  "module": "./src/AQE-light.js",
+  "browser": "./dist/AQE-light.min.js",
+  "exports": {
+    ".": {
+      "import": "./src/AQE-light.js",
+      "require": "./dist/AQE-light.cjs",
+      "browser": "./dist/AQE-light.min.js"
+    }
+  },
   "files": [
-    "AQE-light.js",
-    "AQE-pro.js",
+    "src/AQE-light.js",
+    "dist/AQE-light.min.js",
+    "dist/AQE-light.cjs",
     "README.md",
     "LICENSE"
   ],
   "scripts": {
-    "test": "echo \"No tests defined yet\" && exit 0",
-    "info": "echo \"AQE - Atomic Quantum Engine: The fastest DOM selector available\""
+    "build": "node build.js",
+    "test": "node --experimental-vm-modules tests/AQE-light.test.js",
+    "lint": "eslint src/AQE-light.js",
+    "prepublishOnly": "npm run lint && npm run build && npm test"
   },
   "engines": {
-    "node": ">=12.0.0",
-    "browsers": ">=Chrome 60, >=Firefox 55, >=Safari 11, >=Edge 79"
+    "node": ">=16.0.0"
   },
   "funding": {
     "type": "individual",
-    "url": "https://github.com/sponsors/willmartAQE"
+    "url": "https://williammartin.lemonsqueezy.com"
   }
 }
