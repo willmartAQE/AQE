@@ -1,1 +1,116 @@
+name: CI
 
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  lint-and-test:
+    name: Lint & Test
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x, 22.x]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check source file exists
+        run: |
+          test -f src/AQE-light.js   || (echo "ERROR: src/AQE-light.js not found" && exit 1)
+          test -f dist/AQE-light.min.js || (echo "ERROR: dist/AQE-light.min.js not found" && exit 1)
+          echo "Source files OK"
+
+      - name: Validate syntax (src)
+        run: node --input-type=module < src/AQE-light.js && echo "ESM syntax OK"
+
+      - name: Validate syntax (min)
+        run: |
+          # Strip ESM export for CJS syntax check
+          node -e "
+            const fs = require('fs');
+            let code = fs.readFileSync('dist/AQE-light.min.js', 'utf8');
+            code = code.replace(/export\s+default\s+\w+;?/, '');
+            new Function(code);
+            console.log('Minified syntax OK');
+          "
+
+      - name: Run functional tests
+        run: npm test
+
+  validate-package:
+    name: Validate package.json
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Validate package fields
+        run: |
+          node -e "
+            const pkg = require('./package.json');
+            const required = ['name','version','description','license','main','module','exports'];
+            const missing = required.filter(f => !pkg[f]);
+            if (missing.length) {
+              console.error('Missing fields:', missing.join(', '));
+              process.exit(1);
+            }
+            console.log('package.json OK — all required fields present');
+          "
+
+      - name: Check npm pack output
+        run: |
+          npm pack --dry-run 2>&1
+          echo "Pack dry-run OK"
+
+  size-report:
+    name: Bundle Size Report
+    runs-on: ubuntu-latest
+    needs: lint-and-test
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Report file sizes
+        run: |
+          echo "## Bundle Size Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| File | Size |" >> $GITHUB_STEP_SUMMARY
+          echo "|---|---|" >> $GITHUB_STEP_SUMMARY
+
+          SRC_SIZE=$(wc -c < src/AQE-light.js)
+          MIN_SIZE=$(wc -c < dist/AQE-light.min.js)
+          REDUCTION=$(node -e "console.log(((1 - $MIN_SIZE / $SRC_SIZE) * 100).toFixed(1) + '%')")
+
+          echo "| \`src/AQE-light.js\`       | ${SRC_SIZE} bytes |" >> $GITHUB_STEP_SUMMARY
+          echo "| \`dist/AQE-light.min.js\`  | ${MIN_SIZE} bytes |" >> $GITHUB_STEP_SUMMARY
+          echo "| Reduction                 | ${REDUCTION}       |" >> $GITHUB_STEP_SUMMARY
+
+          echo ""
+          echo "src/AQE-light.js    : ${SRC_SIZE} bytes"
+          echo "dist/AQE-light.min.js: ${MIN_SIZE} bytes"
+          echo "Reduction           : ${REDUCTION}"
