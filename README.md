@@ -155,6 +155,16 @@ AQE Pro is the full engine: off-thread scanning, Bloom bucket skipping, atomic s
 
 ## Performance
 
+### Live Benchmark
+
+Run the benchmark directly in your browser — real DOM nodes, real measurements via `performance.now()`, no mocks:
+
+**🔬 [willmartaqe.github.io/AQE](https://willmartaqe.github.io/AQE/)**
+
+Configure DOM size (up to 50,000 nodes), selector, hit rate and iterations. AQE Light runs live in your browser; AQE Pro times are simulated based on its measured algorithmic properties (Bloom bucket skipping + Worker overhead).
+
+---
+
 ### Benchmark Estimates
 
 The following estimates are based on a DOM of **20,000 nodes** with an average of 3 classes and 2 attributes per node, querying a moderately selective compound selector (`.active[data-ready]`).
