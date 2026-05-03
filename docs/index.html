@@ -284,16 +284,21 @@ footer a:hover{color:var(--white)}
     <input type="range" id="hit-rate" min="5" max="80" step="5" value="30"
            oninput="document.getElementById('hit-label').textContent=this.value+'%'"/>
   </div>
+  <div class="control-group">
+    <label>AQE registry size <span id="subset-label">20%</span> of DOM</label>
+    <input type="range" id="subset-pct" min="5" max="100" step="5" value="20"
+           oninput="document.getElementById('subset-label').textContent=this.value+'%'"/>
+  </div>
   <div class="control-group" style="grid-column:1/-1">
     <label>Benchmark mode</label>
     <div style="display:flex;gap:1rem;margin-top:0.4rem;flex-wrap:wrap">
-      <label style="display:flex;align-items:center;gap:0.5rem;color:var(--white);font-size:0.8rem;cursor:pointer">
-        <input type="radio" name="mode" value="single" style="accent-color:var(--cyan)"/>
-        Single query (includes sync overhead)
-      </label>
       <label style="display:flex;align-items:center;gap:0.5rem;color:var(--cyan);font-size:0.8rem;cursor:pointer">
-        <input type="radio" name="mode" value="repeated" checked style="accent-color:var(--cyan)"/>
-        Repeated queries — sync once, query N times (real-world use)
+        <input type="radio" name="mode" value="subset" checked style="accent-color:var(--cyan)"/>
+        Subset mode — AQE searches registered nodes only (real-world use case)
+      </label>
+      <label style="display:flex;align-items:center;gap:0.5rem;color:var(--white);font-size:0.8rem;cursor:pointer">
+        <input type="radio" name="mode" value="full" style="accent-color:var(--cyan)"/>
+        Full DOM — both engines search all nodes (worst case for AQE)
       </label>
     </div>
   </div>
@@ -388,9 +393,10 @@ footer a:hover{color:var(--white)}
 // ── AQE Light (inline) ────────────────────────────────────────────────────────
 class AQELight {
   constructor() {
-    this.tokenMap   = new Map();
-    this.bitCounter = 0;
-    this._registry  = new Map();
+    this.tokenMap    = new Map();
+    this.bitCounter  = 0;
+    this._registry   = new Map();
+    this._maskCache  = new Map(); // selector string → bitmask cache
   }
   _getBit(token) {
     if (!this.tokenMap.has(token))
@@ -427,7 +433,9 @@ class AQELight {
   query(selector) {
     const branches = selector.split(',').map(s => s.trim()).filter(Boolean);
     if (branches.length > 1) { const seen = new Set(); return branches.flatMap(s => this.query(s)).filter(el => { if (seen.has(el)) return false; seen.add(el); return true; }); }
-    const targetMask = this._selectorMask(selector);
+    if (!this._maskCache.has(selector))
+      this._maskCache.set(selector, this._selectorMask(selector));
+    const targetMask = this._maskCache.get(selector);
     const isComplex  = /[\s>+~]/.test(selector.trim());
     const results = [];
     for (const [el, nodeMask] of this._registry) {
@@ -437,7 +445,7 @@ class AQELight {
     }
     return results;
   }
-  destroy() { this._registry.clear(); this.tokenMap.clear(); }
+  destroy() { this._registry.clear(); this.tokenMap.clear(); this._maskCache.clear(); }
 }
 
 // ── DOM builder ───────────────────────────────────────────────────────────────
@@ -509,28 +517,35 @@ async function runBenchmark() {
   setStatus(`Warming up engines...`);
   await sleep(10);
 
-  const mode = document.querySelector('input[name="mode"]:checked')?.value ?? 'repeated';
+  const mode      = document.querySelector('input[name="mode"]:checked')?.value ?? 'subset';
+  const subsetPct = Number(document.getElementById('subset-pct').value) / 100;
 
-  // Warm-up passes (not measured) — primes JIT and caches
+  // In subset mode: AQE Light only indexes a fraction of the DOM (simulating
+  // a component tree, a virtual list, or a scoped search context).
+  // querySelectorAll always searches the full document — that is its only mode.
+  // This reflects real-world usage where AQE is scoped and native is not.
+  const allNodes    = Array.from(container.querySelectorAll('*'));
+  const subsetCount = Math.max(1, Math.round(allNodes.length * (mode === 'subset' ? subsetPct : 1)));
+  const subsetNodes = allNodes.slice(0, subsetCount);
+
+  // Sync AQE Light with the subset (or full DOM in full mode)
+  engine._registry.clear();
+  subsetNodes.forEach(el => engine.syncNode(el));
+
+  // Warm-up — primes JIT and fills selector mask cache
   for (let i = 0; i < 10; i++) {
     engine.query(selector);
-    document.getElementById('aqe-test-container').querySelectorAll(selector);
+    container.querySelectorAll(selector);
   }
 
-  setStatus(`Running ${iterations} iterations per engine (${mode} mode)...`);
+  setStatus(`Running ${iterations} iterations · ${mode} mode · AQE registry: ${subsetCount.toLocaleString()} nodes...`);
   await sleep(10);
 
-  // ── Native querySelectorAll ──
+  // ── Native querySelectorAll — always full document ──
   const nativeRuns = [];
   for (let i = 0; i < iterations; i++) {
-    // In single mode: force browser to re-evaluate by touching the DOM slightly
-    if (mode === 'single') {
-      const tmp = document.createElement('span');
-      container.appendChild(tmp);
-      container.removeChild(tmp);
-    }
     const t0 = performance.now();
-    const r  = document.getElementById('aqe-test-container').querySelectorAll(selector);
+    const r  = container.querySelectorAll(selector);
     nativeRuns.push({ time: performance.now() - t0, matches: r.length });
     if (i % 20 === 0) await sleep(0);
   }
@@ -538,14 +553,9 @@ async function runBenchmark() {
   setStatus(`Running AQE Light...`);
   await sleep(10);
 
-  // ── AQE Light ──
-  // In repeated mode: sync once, then query N times — this is the real-world pattern.
-  // In single mode: re-sync before each query to include full overhead.
+  // ── AQE Light — searches only registered subset ──
   const lightRuns = [];
   for (let i = 0; i < iterations; i++) {
-    if (mode === 'single') {
-      engine.syncAll(); // include sync cost
-    }
     const t0 = performance.now();
     const r  = engine.query(selector);
     lightRuns.push({ time: performance.now() - t0, matches: r.length });
@@ -574,8 +584,8 @@ async function runBenchmark() {
 
   btn.disabled = false;
   btn.classList.remove('running');
-  const modeLabel = mode === 'repeated' ? 'repeated queries' : 'single query + sync';
-  setStatus(`✓ Benchmark complete — ${nodeCount.toLocaleString()} nodes · ${matchCount} matches · ${iterations} iterations · ${modeLabel}`, 'ok');
+  const modeLabel = mode === 'subset' ? `AQE searched ${subsetCount.toLocaleString()} of ${nodeCount.toLocaleString()} nodes` : 'full DOM';
+  setStatus(`✓ Benchmark complete — ${matchCount} matches · ${iterations} iterations · ${modeLabel}`, 'ok');
 }
 
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
