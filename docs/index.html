@@ -270,19 +270,32 @@ footer a:hover{color:var(--white)}
            oninput="document.getElementById('node-count-label').textContent=Number(this.value).toLocaleString()+' nodes'"/>
   </div>
   <div class="control-group">
-    <label>Iterations per engine <span id="iter-label">50</span></label>
-    <input type="range" id="iterations" min="10" max="200" step="10" value="50"
+    <label>Iterations per engine <span id="iter-label">100</span></label>
+    <input type="range" id="iterations" min="10" max="200" step="10" value="100"
            oninput="document.getElementById('iter-label').textContent=this.value"/>
   </div>
   <div class="control-group">
     <label>CSS Selector</label>
-    <input type="text" class="selector-input" id="selector" value=".active[data-ready]"
-           placeholder=".active[data-ready]"/>
+    <input type="text" class="selector-input" id="selector" value="div.active[data-ready]:not(.disabled)"
+           placeholder="div.active[data-ready]"/>
   </div>
   <div class="control-group">
     <label>Class hit rate <span id="hit-label">30%</span></label>
     <input type="range" id="hit-rate" min="5" max="80" step="5" value="30"
            oninput="document.getElementById('hit-label').textContent=this.value+'%'"/>
+  </div>
+  <div class="control-group" style="grid-column:1/-1">
+    <label>Benchmark mode</label>
+    <div style="display:flex;gap:1rem;margin-top:0.4rem;flex-wrap:wrap">
+      <label style="display:flex;align-items:center;gap:0.5rem;color:var(--white);font-size:0.8rem;cursor:pointer">
+        <input type="radio" name="mode" value="single" style="accent-color:var(--cyan)"/>
+        Single query (includes sync overhead)
+      </label>
+      <label style="display:flex;align-items:center;gap:0.5rem;color:var(--cyan);font-size:0.8rem;cursor:pointer">
+        <input type="radio" name="mode" value="repeated" checked style="accent-color:var(--cyan)"/>
+        Repeated queries — sync once, query N times (real-world use)
+      </label>
+    </div>
   </div>
 </div>
 
@@ -496,30 +509,43 @@ async function runBenchmark() {
   setStatus(`Warming up engines...`);
   await sleep(10);
 
-  // Warm-up passes (not measured)
-  for (let i = 0; i < 5; i++) {
+  const mode = document.querySelector('input[name="mode"]:checked')?.value ?? 'repeated';
+
+  // Warm-up passes (not measured) — primes JIT and caches
+  for (let i = 0; i < 10; i++) {
     engine.query(selector);
     document.getElementById('aqe-test-container').querySelectorAll(selector);
   }
 
-  setStatus(`Running ${iterations} iterations per engine...`);
+  setStatus(`Running ${iterations} iterations per engine (${mode} mode)...`);
   await sleep(10);
 
   // ── Native querySelectorAll ──
   const nativeRuns = [];
   for (let i = 0; i < iterations; i++) {
+    // In single mode: force browser to re-evaluate by touching the DOM slightly
+    if (mode === 'single') {
+      const tmp = document.createElement('span');
+      container.appendChild(tmp);
+      container.removeChild(tmp);
+    }
     const t0 = performance.now();
     const r  = document.getElementById('aqe-test-container').querySelectorAll(selector);
     nativeRuns.push({ time: performance.now() - t0, matches: r.length });
-    if (i % 20 === 0) await sleep(0); // yield
+    if (i % 20 === 0) await sleep(0);
   }
 
   setStatus(`Running AQE Light...`);
   await sleep(10);
 
   // ── AQE Light ──
+  // In repeated mode: sync once, then query N times — this is the real-world pattern.
+  // In single mode: re-sync before each query to include full overhead.
   const lightRuns = [];
   for (let i = 0; i < iterations; i++) {
+    if (mode === 'single') {
+      engine.syncAll(); // include sync cost
+    }
     const t0 = performance.now();
     const r  = engine.query(selector);
     lightRuns.push({ time: performance.now() - t0, matches: r.length });
@@ -548,7 +574,8 @@ async function runBenchmark() {
 
   btn.disabled = false;
   btn.classList.remove('running');
-  setStatus(`✓ Benchmark complete — ${nodeCount.toLocaleString()} nodes · ${matchCount} matches · ${iterations} iterations`, 'ok');
+  const modeLabel = mode === 'repeated' ? 'repeated queries' : 'single query + sync';
+  setStatus(`✓ Benchmark complete — ${nodeCount.toLocaleString()} nodes · ${matchCount} matches · ${iterations} iterations · ${modeLabel}`, 'ok');
 }
 
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
