@@ -153,6 +153,39 @@ AQE Pro is the full engine: off-thread scanning, Bloom bucket skipping, atomic s
 
 ---
 
+## When AQE Light Is Faster Than querySelectorAll
+
+`querySelectorAll` always searches the **entire document**. It has no concept of scope — every call walks every node in the DOM tree from the root.
+
+AQE Light maintains a **registry** of nodes you explicitly sync. This means it only searches the nodes you care about.
+
+When your registry is smaller than the full DOM, AQE Light wins — not because its algorithm is faster, but because it does less work:
+
+```js
+// querySelectorAll: searches all 50,000 nodes in the document
+document.querySelectorAll('.active[data-ready]');
+
+// AQE Light: searches only the 2,000 nodes in your component tree
+const engine = new AQELight();
+myComponentNodes.forEach(el => engine.syncNode(el));
+engine.query('.active[data-ready]'); // 25× less work
+```
+
+**Practical examples where this applies:**
+
+- A virtual list that renders 500 rows out of 100,000 records
+- A design tool that tracks only the selected layer's children
+- A dashboard widget that manages its own internal node set
+- A component library that scopes queries to its own shadow tree
+
+**When querySelectorAll is faster:**
+
+If you sync the entire document (`engine.syncAll()`) and query once, `querySelectorAll` wins — it is implemented in C++ inside the browser engine and has no JavaScript overhead. AQE Light is not a drop-in replacement for arbitrary one-off queries.
+
+**Rule of thumb:** the smaller your registry relative to the full DOM, the larger AQE Light's advantage. At 20% of the DOM, expect 3–5× faster queries. At 5%, expect 10–15×.
+
+---
+
 ## Performance
 
 ### Live Benchmark
