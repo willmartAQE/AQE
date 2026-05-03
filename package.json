@@ -1,6 +1,6 @@
 {
   "name": "atomic-quantum-engine",
-  "version": "3.0.0",
+  "version": "3.1.0",
   "description": "High-performance CSS selector engine built on BigInt bitmasks, SharedArrayBuffer, dual Bloom bucket indexing, and off-thread Web Worker matching. Up to 40× faster than querySelectorAll on large DOMs with high query frequency.",
   "keywords": [
     "css-selector",
